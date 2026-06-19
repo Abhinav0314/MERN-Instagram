@@ -10,7 +10,7 @@ function RefCard() {
   };
 
   return (
-    <div className="card shadow-sm p-3 border-warning border-3">
+    <div className="p-2">
       <h4 className="text-center text-warning mb-3">
         Ref Dashboard
       </h4>

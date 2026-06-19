@@ -11,7 +11,7 @@ function AxiosCard() {
   }, []);
 
   return (
-    <div className="card shadow-sm p-3 border-info border-3">
+    <div className="p-2">
       <h4 className="text-center text-info mb-3">
         Axios Users Dashboard
       </h4>

@@ -14,7 +14,7 @@ function TodoCard() {
   }
 
   return (
-    <div className="card shadow-sm p-3 border-primary border-3">
+    <div className="p-2">
       <h4 className="text-center text-primary mb-3">
         Todo Form
       </h4>

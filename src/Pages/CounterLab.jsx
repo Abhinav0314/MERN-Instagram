@@ -21,7 +21,7 @@ function Counter() {
   }, []);
 
   return (
-    <div className="card shadow-sm p-3 border-success border-3">
+    <div className="p-2">
       <h4 className="text-center text-success mb-3">
         Counter Dashboard
       </h4>

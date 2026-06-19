@@ -23,7 +23,7 @@ function ExpenseTracker() {
   const total = expenses.reduce((acc, curr) => acc + curr.amount, 0);
 
   return (
-    <div className="card shadow-sm p-3 border-danger border-3">
+    <div className="p-2">
       <h4 className="text-center text-danger mb-3">Expense Tracker</h4>
       
       <div className="card p-3 mb-3 bg-light border-0">
