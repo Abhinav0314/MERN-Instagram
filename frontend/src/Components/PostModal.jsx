@@ -3,10 +3,10 @@ import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/utils/apiClient';
 import { toast } from 'react-toastify';
-import { Heart, MessageCircle, Send, Bookmark, Smile, X, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Send, Bookmark, Smile, X, MoreHorizontal, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
 
-const PostModal = ({ post, onClose, onUpdatePost, hideImageOnMobile = false }) => {
+const PostModal = ({ posts, initialIndex = 0, onClose, onUpdatePost, hideImageOnMobile = false }) => {
     const [commentText, setCommentText] = useState('');
     const [loading, setLoading] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
@@ -14,11 +14,47 @@ const PostModal = ({ post, onClose, onUpdatePost, hideImageOnMobile = false }) =
     const [showMenu, setShowMenu] = useState(false);
     const commentInputRef = useRef(null);
     const commentsRef = useRef(null);
-    
+    const [currentIndex, setCurrentIndex] = useState(initialIndex);
+    const post = posts?.[currentIndex];
+
     // Swipe-to-close state
     const [translateY, setTranslateY] = useState(0);
     const touchStartY = useRef(null);
     const isDragging = useRef(false);
+
+    const handleNext = (e) => {
+        if (e) e.stopPropagation();
+        if (currentIndex < posts.length - 1) {
+            setCurrentIndex(prev => prev + 1);
+            setCommentText('');
+            setReplyingTo(null);
+            setTranslateY(0);
+        }
+    };
+
+    const handlePrev = (e) => {
+        if (e) e.stopPropagation();
+        if (currentIndex > 0) {
+            setCurrentIndex(prev => prev - 1);
+            setCommentText('');
+            setReplyingTo(null);
+            setTranslateY(0);
+        }
+    };
+
+    React.useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'ArrowRight') {
+                handleNext();
+            } else if (e.key === 'ArrowLeft') {
+                handlePrev();
+            } else if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [currentIndex, posts?.length]);
 
     React.useEffect(() => {
         if (!post) return;
@@ -236,6 +272,19 @@ const PostModal = ({ post, onClose, onUpdatePost, hideImageOnMobile = false }) =
             <button className="post-modal-close" onClick={onClose}>
                 <X size={28} color="white" />
             </button>
+            
+            {currentIndex > 0 && (
+                <button className="post-modal-nav-btn prev d-none d-md-flex" onClick={handlePrev}>
+                    <ChevronLeft size={36} color="white" />
+                </button>
+            )}
+            
+            {currentIndex < posts.length - 1 && (
+                <button className="post-modal-nav-btn next d-none d-md-flex" onClick={handleNext}>
+                    <ChevronRight size={36} color="white" />
+                </button>
+            )}
+
             <div 
                 className="post-modal-content" 
                 onClick={e => e.stopPropagation()}
@@ -243,32 +292,34 @@ const PostModal = ({ post, onClose, onUpdatePost, hideImageOnMobile = false }) =
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 style={{ 
-                    transform: `translateY(${translateY}px)`, 
+                    transform: translateY !== 0 ? `translateY(${translateY}px)` : undefined, 
                     transition: translateY !== 0 ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)' 
                 }}
             >
                 {/* Mobile Drag Handle */}
                 <div className="d-flex d-md-none justify-content-center py-2 bg-white" style={{ borderRadius: '16px 16px 0 0' }}>
-                    <div style={{ width: '40px', height: '4px', backgroundColor: '#dee2e6', borderRadius: '4px' }}></div>
+                    <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--border-color)', borderRadius: '4px' }}></div>
                 </div>
 
-                <div className="row g-0 h-100 w-100 flex-grow-1 overflow-y-auto overflow-x-hidden">
+                <div className="d-flex flex-column flex-md-row h-100 w-100 flex-grow-1 overflow-hidden bg-black">
                     {/* Top/Left: Image (Visible on all screens, unless hidden on mobile) */}
-                    <div className={`col-12 col-md-7 post-modal-image-container bg-light align-items-center justify-content-center p-3 ${hideImageOnMobile ? 'd-none d-md-flex' : 'd-flex'}`} style={{ height: 'min-content' }}>
-                        <Image 
-                            src={post.imageUrl} 
-                            alt={post.caption} 
-                            width={800}
-                            height={800}
-                            className="post-modal-image w-100 shadow-sm"
-                            style={{ objectFit: 'contain', maxHeight: '100%', borderRadius: '12px' }}
-                            onDoubleClick={handleLike}
-                            onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/600x400/f1f3f5/6c757d?text=Image+Not+Found'; }}
-                        />
+                    <div className={`post-modal-image-container bg-black align-items-center justify-content-center p-0 ${hideImageOnMobile ? 'd-none d-md-flex' : 'd-flex'}`} style={{ position: 'relative' }}>
+                        <div className="position-relative w-100 h-100 d-flex align-items-center justify-content-center">
+                            <Image 
+                                src={post.imageUrl} 
+                                alt={post.caption} 
+                                fill
+                                sizes="(max-width: 768px) 100vw, 60vw"
+                                style={{ objectFit: 'contain' }}
+                                onDoubleClick={handleLike}
+                                onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/600x400/000000/FFFFFF?text=Image+Not+Found'; }}
+                                priority
+                            />
+                        </div>
                     </div>
 
                     {/* Bottom/Right: Details & Comments */}
-                    <div className="col-12 col-md-5 post-modal-details d-flex flex-column bg-white border-start-md">
+                    <div className="post-modal-details d-flex flex-column bg-white border-start-md">
                         {/* Header & Caption */}
                         <div className="post-modal-header p-3 border-bottom d-flex align-items-center justify-content-between bg-white z-1 shadow-sm">
                             <div className="d-flex align-items-center">

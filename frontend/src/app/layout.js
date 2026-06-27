@@ -29,22 +29,27 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       data-scroll-behavior="smooth"
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        <Script id="theme-init" strategy="beforeInteractive">
-          {`
-            (function() {
-              try {
-                var theme = localStorage.getItem('theme');
-                if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.documentElement.setAttribute('data-theme', 'dark');
-                } else {
-                  document.documentElement.setAttribute('data-theme', 'light');
-                }
-              } catch (e) {}
-            })();
-          `}
-        </Script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.setAttribute('data-bs-theme', 'dark');
+                  } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    document.documentElement.setAttribute('data-bs-theme', 'light');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
         <Script id="hide-logs" strategy="beforeInteractive">
           {`
             if (typeof window !== 'undefined') {
@@ -94,7 +99,7 @@ export default function RootLayout({ children }) {
         </Script>
         <Providers>
           <Navbar />
-          <main className="pb-5">
+          <main className="pb-0 pb-md-5">
             {children}
           </main>
           <ToastContainer position="top-right" autoClose={3000} />

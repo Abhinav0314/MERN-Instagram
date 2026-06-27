@@ -128,7 +128,8 @@ export default function Feed() {
       
       {selectedPost && (
         <PostModal 
-            post={selectedPost} 
+            posts={[selectedPost]} 
+            initialIndex={0}
             onClose={() => setSelectedPost(null)} 
             onUpdatePost={handleUpdatePost} 
             hideImageOnMobile={true}

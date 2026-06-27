@@ -46,7 +46,7 @@ const ConfirmModal = ({ isOpen, title, subtitle, onConfirm, onCancel, confirmTex
                     style={{ 
                         background: 'transparent', 
                         border: 'none', 
-                        borderTop: '1px solid #dbdbdb', 
+                        borderTop: '1px solid var(--border-color)', 
                         height: '48px',
                         fontSize: '14px',
                         color: confirmColor
@@ -60,10 +60,10 @@ const ConfirmModal = ({ isOpen, title, subtitle, onConfirm, onCancel, confirmTex
                     style={{ 
                         background: 'transparent', 
                         border: 'none', 
-                        borderTop: '1px solid #dbdbdb',
+                        borderTop: '1px solid var(--border-color)',
                         height: '48px',
                         fontSize: '14px',
-                        color: '#000'
+                        color: 'var(--text-main)'
                     }}
                     onClick={onCancel}
                 >

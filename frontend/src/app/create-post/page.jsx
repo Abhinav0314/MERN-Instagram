@@ -135,7 +135,7 @@ export default function CreatePost() {
       )}
 
       <div className="w-100" style={{ maxWidth: previewUrl ? '850px' : '500px', transition: 'max-width 0.3s ease' }}>
-        <div className="bg-white rounded-3 overflow-hidden shadow" style={{ border: '1px solid #dbdbdb' }}>
+        <div className="bg-white rounded-3 overflow-hidden shadow" style={{ border: '1px solid var(--border-color)' }}>
           <div className="d-none d-md-flex justify-content-between align-items-center border-bottom px-3 py-2 bg-white">
             <span style={{ width: '60px' }}></span>
             <span className="fw-bold m-0" style={{ fontSize: '16px' }}>Create new post</span>
@@ -177,8 +177,8 @@ export default function CreatePost() {
                     onDrop={handleDrop}
                   >
                     <div className="text-center" style={{ cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
-                        <ImageIcon size={64} className="mb-3 mx-auto" style={{ color: isDragging ? '#0095f6' : '#262626' }} strokeWidth={1} />
-                        <h5 className="mb-3" style={{ fontWeight: 300, color: '#262626' }}>Drag photos and videos here</h5>
+                        <ImageIcon size={64} className="mb-3 mx-auto" style={{ color: isDragging ? '#0095f6' : 'var(--text-main)' }} strokeWidth={1} />
+                        <h5 className="mb-3" style={{ fontWeight: 300, color: 'var(--text-main)' }}>Drag photos and videos here</h5>
                         <button type="button" className="btn btn-primary btn-sm fw-bold px-3 py-2 rounded-3">Select from device</button>
                     </div>
 

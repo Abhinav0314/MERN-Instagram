@@ -14,8 +14,18 @@ export default function UserDashboard() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('posts');
     const [selectedPost, setSelectedPost] = useState(null);
+    const [modalData, setModalData] = useState({ isOpen: false, posts: [], initialIndex: 0 });
     const [viewMode, setViewMode] = useState('grid');
     const [scrollToPostId, setScrollToPostId] = useState(null);
+
+    const handlePostClick = (post, index, postsArray) => {
+        if (window.innerWidth > 768) {
+            setModalData({ isOpen: true, posts: postsArray, initialIndex: index });
+        } else {
+            setViewMode('list');
+            setScrollToPostId(post._id);
+        }
+    };
 
     useEffect(() => {
         if (viewMode === 'list' && scrollToPostId) {
@@ -27,6 +37,19 @@ export default function UserDashboard() {
             }, 100);
         }
     }, [viewMode, scrollToPostId]);
+
+    // Handle window resizing: if user resizes from mobile to desktop while in list view, switch back to grid
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth > 768 && viewMode === 'list') {
+                setViewMode('grid');
+                setScrollToPostId(null);
+            }
+        };
+        
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [viewMode]);
 
     const { data: user, isLoading: userLoading, isError: userError } = useQuery({
         queryKey: ['currentUser'],
@@ -90,12 +113,33 @@ export default function UserDashboard() {
         queryClient.invalidateQueries({ queryKey: ['savedPosts'] });
         queryClient.invalidateQueries({ queryKey: ['taggedPosts'] });
         
+        // Update selectedPost for list view comments
         if (selectedPost && selectedPost._id === updatedPost._id) {
             if (updatedPost._deleted) {
                 setSelectedPost(null);
             } else {
                 setSelectedPost(updatedPost);
             }
+        }
+
+        // Update modalData posts if it's open
+        if (modalData.isOpen) {
+            setModalData(prev => {
+                const newPosts = [...prev.posts];
+                const idx = newPosts.findIndex(p => p._id === updatedPost._id);
+                if (idx !== -1) {
+                    if (updatedPost._deleted) {
+                        newPosts.splice(idx, 1);
+                    } else {
+                        newPosts[idx] = updatedPost;
+                    }
+                }
+                // If the current post was deleted and there are no posts left, close the modal
+                if (updatedPost._deleted && newPosts.length === 0) {
+                    return { ...prev, isOpen: false, posts: [] };
+                }
+                return { ...prev, posts: newPosts };
+            });
         }
     };
 
@@ -118,7 +162,7 @@ export default function UserDashboard() {
     if (!user) return null;
 
     return (
-        <div className="w-100 px-0 px-md-3 pb-5 mx-auto" style={{ maxWidth: '975px' }}>
+        <div className="w-100 px-0 px-md-3 pb-0 pb-md-5 mx-auto" style={{ maxWidth: '975px' }}>
             {viewMode === 'grid' ? (
                 <>
             <div className="profile-header-container mt-2 mt-md-5 mb-4">
@@ -241,8 +285,8 @@ export default function UserDashboard() {
                             <p>When you share photos, they will appear on your profile.</p>
                         </div>
                     ) : (
-                        posts.map((post) => (
-                            <div key={post._id} className="grid-item hover-shadow" onClick={() => { setViewMode('list'); setScrollToPostId(post._id); }}>
+                        posts.map((post, index) => (
+                            <div key={post._id} className="grid-item hover-shadow" onClick={() => handlePostClick(post, index, posts)}>
                                 <Image 
                                     src={post.imageUrl} 
                                     alt={post.caption} 
@@ -276,8 +320,8 @@ export default function UserDashboard() {
                             <p>Save photos and videos that you want to see again.</p>
                         </div>
                     ) : (
-                        savedPosts.map((post) => (
-                            <div key={post._id} className="grid-item hover-shadow" onClick={() => { setViewMode('list'); setScrollToPostId(post._id); }}>
+                        savedPosts.map((post, index) => (
+                            <div key={post._id} className="grid-item hover-shadow" onClick={() => handlePostClick(post, index, savedPosts)}>
                                 <Image 
                                     src={post.imageUrl} 
                                     alt={post.caption} 
@@ -311,8 +355,8 @@ export default function UserDashboard() {
                             <p>When people tag you in photos, they&apos;ll appear here.</p>
                         </div>
                     ) : (
-                        taggedPosts.map((post) => (
-                            <div key={post._id} className="grid-item hover-shadow" onClick={() => { setViewMode('list'); setScrollToPostId(post._id); }}>
+                        taggedPosts.map((post, index) => (
+                            <div key={post._id} className="grid-item hover-shadow" onClick={() => handlePostClick(post, index, taggedPosts)}>
                                 <Image 
                                     src={post.imageUrl} 
                                     alt={post.caption} 
@@ -332,16 +376,18 @@ export default function UserDashboard() {
             )}
             </>
             ) : (
-                <div className="profile-feed-view">
-                    <div className="sticky-top bg-white p-3 d-flex align-items-center">
-                        <button className="btn btn-link text-dark p-0 me-3" onClick={() => { setViewMode('grid'); setScrollToPostId(null); }}>
-                            <ArrowLeft size={28} />
+                <div className="profile-feed-view w-100">
+                    <div className="sticky-top bg-white border-bottom d-flex align-items-center py-2 px-3 shadow-sm" style={{ zIndex: 1020 }}>
+                        <button className="btn btn-link text-dark p-0 me-3 d-flex align-items-center justify-content-center" onClick={() => { setViewMode('grid'); setScrollToPostId(null); }} style={{ width: '40px', height: '40px', borderRadius: '50%' }}>
+                            <ArrowLeft size={24} />
                         </button>
-                        <h5 className="mb-0 fw-bold text-uppercase">{activeTab === 'posts' ? 'Posts' : activeTab === 'saved' ? 'Saved' : 'Photos of You'}</h5>
+                        <h5 className="mb-0 fw-bold text-uppercase fs-6 tracking-wide" style={{ letterSpacing: '1px' }}>
+                            {activeTab === 'posts' ? 'Posts' : activeTab === 'saved' ? 'Saved' : 'Photos of You'}
+                        </h5>
                     </div>
-                    <div>
+                    <div className="px-0 px-md-3">
                         {(activeTab === 'posts' ? posts : activeTab === 'saved' ? savedPosts : taggedPosts).map(post => (
-                            <div key={post._id} id={`post-${post._id}`} className="mb-4" style={{ scrollMarginTop: '70px' }}>
+                            <div key={post._id} id={`post-${post._id}`} className="mb-0 mb-md-4" style={{ scrollMarginTop: '70px' }}>
                                 <PostCard 
                                     post={post} 
                                     currentUserId={user?._id} 
@@ -354,12 +400,26 @@ export default function UserDashboard() {
                 </div>
             )}
             
+            
+            {/* Modal for comments from feed view */}
             {selectedPost && (
                 <PostModal 
-                    post={selectedPost} 
+                    posts={[selectedPost]} 
+                    initialIndex={0}
                     onClose={() => setSelectedPost(null)} 
                     onUpdatePost={handleUpdatePost} 
                     hideImageOnMobile={true}
+                />
+            )}
+
+            {/* Modal for grid view desktop expansion */}
+            {modalData.isOpen && modalData.posts.length > 0 && (
+                <PostModal 
+                    posts={modalData.posts} 
+                    initialIndex={modalData.initialIndex}
+                    onClose={() => setModalData({ isOpen: false, posts: [], initialIndex: 0 })} 
+                    onUpdatePost={handleUpdatePost} 
+                    hideImageOnMobile={false}
                 />
             )}
 
